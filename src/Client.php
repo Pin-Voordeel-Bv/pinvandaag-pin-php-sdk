@@ -35,20 +35,28 @@ class Client
     public function request(string $endpoint, array $data = []): array
     {
         $payload = array_merge([
-            "terminalId" => $this->terminalId,
-            "key" => $this->apiKey
+            "terminal_id" => $this->terminalId,
         ], $data);
 
         $url = $this->baseUrl . $endpoint;
 
-        $this->logger->log("REQUEST", $payload);
+        $this->logger->log("REQUEST", [
+            "url" => $url,
+            "payload" => $payload,
+        ]);
 
         $ch = curl_init($url);
 
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($payload),
             CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTPHEADER => [
+                'X-API-KEY: ' . $this->apiKey,
+                'Accept: application/json',
+                'Content-Type: application/x-www-form-urlencoded',
+            ],
         ]);
 
         $response = curl_exec($ch);
@@ -65,7 +73,7 @@ class Client
         }
 
         if ($httpCode >= 400) {
-            throw new PinVandaagException("HTTP error: " . $httpCode);
+            throw new PinVandaagException("HTTP error: " . $httpCode . " response: " . $response);
         }
 
         if (empty($response)) {
