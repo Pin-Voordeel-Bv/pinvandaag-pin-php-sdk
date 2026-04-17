@@ -24,3 +24,17 @@ if ($status['normalizedStatus'] === 'success') {
     echo "Payment OK";
 }
 ```
+
+### Usage webhook
+
+```
+use PinVandaag\SDK\Client;
+use PinVandaag\SDK\Webhook\WebhookHandler;
+
+require 'vendor/autoload.php';
+
+$client = new Client("API_KEY", "TERMINAL_ID");
+
+$handler = new WebhookHandler($client);
+$handler->handle();
+```

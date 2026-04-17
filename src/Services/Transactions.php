@@ -35,9 +35,23 @@ class Transactions
 
     public function status(string $transactionId): array
     {
-        $response = $this->client->request("/V2/instore/transactions/status", [
-            "transaction_id" => $transactionId
-        ]);
+        $response = $this->client->requestWithFallback(
+            "/V2/instore/transactions/status",
+            ["transaction_id" => $transactionId]
+        );
+
+        // 🔥 EXTRA: if transaction not found → force backup
+        if (
+            isset($response['status']) &&
+            in_array(strtolower($response['status']), ['not_found', 'unknown'])
+        ) {
+            $this->client->setBaseUrl("https://backup-api.pinvandaag.com");
+
+            $response = $this->client->request(
+                "/V2/instore/transactions/status",
+                ["transaction_id" => $transactionId]
+            );
+        }
 
         if (isset($response['status'])) {
             $response['normalizedStatus'] = Status::normalize($response['status']);
