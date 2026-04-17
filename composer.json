@@ -1,0 +1,12 @@
+{
+  "name": "pinvandaag/php-sdk",
+  "description": "PinVandaag REST API V2 PHP SDK",
+  "autoload": {
+    "psr-4": {
+      "PinVandaag\\SDK\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=8.0"
+  }
+}
