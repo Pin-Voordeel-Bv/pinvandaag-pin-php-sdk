@@ -1,17 +1,17 @@
 <?php
 
-namespace PinVandaag\SDK\Utils;
+namespace PinVandaag\Utils;
 
 class Logger
 {
     private string $file;
 
-    public function __construct(string $file = null)
+    public function __construct(?string $file = null)
     {
         $this->file = $file ?? __DIR__ . '/../../pinvandaag.log';
     }
 
-    public function log(string $type, $data): void
+    public function log(string $type, $data = null): void
     {
         file_put_contents(
             $this->file,

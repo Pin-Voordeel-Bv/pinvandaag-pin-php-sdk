@@ -9,7 +9,7 @@ require 'vendor/autoload.php';
 $client = new Client("API_KEY", "TERMINAL_ID");
 
 // Optional backup API
-// $client->setBaseUrl("https://backup-api.pinvandaag.com");
+// $client->setBaseUrl("https://api-backup.pinvandaag.com");
 
 $transactions = new Transactions($client);
 

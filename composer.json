@@ -3,7 +3,7 @@
   "description": "PinVandaag REST API V2 PHP SDK",
   "autoload": {
     "psr-4": {
-      "PinVandaag\\SDK\\": "src/"
+      "PinVandaag\\": "src/"
     }
   },
   "require": {

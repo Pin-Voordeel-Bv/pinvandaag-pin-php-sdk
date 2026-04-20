@@ -1,5 +1,5 @@
 <?php
 
-namespace PinVandaag\SDK\Exceptions;
+namespace PinVandaag\Exceptions;
 
 class PinVandaagException extends \Exception {}

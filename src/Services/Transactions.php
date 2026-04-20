@@ -16,7 +16,7 @@ class Transactions
 
     public function create(int $amount): array
     {
-        return $this->client->request("/V2/instore/transactions/create", [
+        return $this->client->requestWithFallback("/V2/instore/transactions/start", [
             "amount" => $amount
         ]);
     }
@@ -28,7 +28,7 @@ class Transactions
 
     public function refund(int $amount): array
     {
-        return $this->client->request("/V2/instore/transactions/refund", [
+        return $this->client->requestWithFallback("/V2/instore/transactions/refund", [
             "amount" => $amount
         ]);
     }
@@ -43,14 +43,19 @@ class Transactions
         // 🔥 EXTRA: if transaction not found → force backup
         if (
             isset($response['status']) &&
-            in_array(strtolower($response['status']), ['not_found', 'unknown'])
+            in_array(strtolower($response['status']), ['not_found', 'unknown'], true)
         ) {
-            $this->client->setBaseUrl("https://backup-api.pinvandaag.com");
+            $originalBaseUrl = $this->client->getBaseUrl();
+            $this->client->setBaseUrl("https://api-backup.pinvandaag.com");
 
-            $response = $this->client->request(
-                "/V2/instore/transactions/status",
-                ["transaction_id" => $transactionId]
-            );
+            try {
+                $response = $this->client->request(
+                    "/V2/instore/transactions/status",
+                    ["transaction_id" => $transactionId]
+                );
+            } finally {
+                $this->client->setBaseUrl($originalBaseUrl);
+            }
         }
 
         if (isset($response['status'])) {
@@ -62,7 +67,7 @@ class Transactions
 
     public function cancel(string $transactionId): bool
     {
-        $response = $this->client->request("/V2/instore/transactions/cancel", [
+        $response = $this->client->requestWithFallback("/V2/instore/transactions/stop", [
             "transaction_id" => $transactionId
         ]);
 

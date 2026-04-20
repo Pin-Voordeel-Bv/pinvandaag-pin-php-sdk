@@ -1,6 +1,6 @@
 <?php
 
-namespace PinVandaag\SDK\Utils;
+namespace PinVandaag\Utils;
 
 class Receipt
 {

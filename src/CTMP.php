@@ -24,13 +24,10 @@ class CTMP
             $this->terminalType !== null &&
             strtolower($this->terminalType) !== 'worldline'
         ) {
-            return [
-                "status" => "error",
-                "message" => "CTMP is alleen beschikbaar voor Worldline terminals.",
-            ];
+            return $this->client->error("CTMP is alleen beschikbaar voor Worldline terminals.");
         }
 
-        $response = $this->client->request(
+        $response = $this->client->requestWithFallback(
             '/V2/instore/transactions/ctmp',
             [],
             'POST'
@@ -40,33 +37,17 @@ class CTMP
         $message = $response['message'] ?? null;
 
         if ($status === 'success') {
-            return [
-                "status" => "success",
-                "message" => $message ?: "CTMP verzoek succesvol verzonden naar terminal.",
-                "data" => $response,
-            ];
+            return $this->client->success($message ?: "CTMP verzoek succesvol verzonden naar terminal.", $response);
         }
 
         if ($status === 204 || $status === '204') {
-            return [
-                "status" => "success",
-                "message" => "CTMP verzoek succesvol verzonden naar terminal.",
-                "data" => $response,
-            ];
+            return $this->client->success("CTMP verzoek succesvol verzonden naar terminal.", $response);
         }
 
         if ($status === 'error') {
-            return [
-                "status" => "error",
-                "message" => $message ?: "CTMP verzoek mislukt.",
-                "data" => $response,
-            ];
+            return $this->client->error($message ?: "CTMP verzoek mislukt.", $response);
         }
 
-        return [
-            "status" => "error",
-            "message" => $message ?: "Onbekende response bij CTMP verzoek.",
-            "data" => $response,
-        ];
+        return $this->client->error($message ?: "Onbekende response bij CTMP verzoek.", $response);
     }
 }

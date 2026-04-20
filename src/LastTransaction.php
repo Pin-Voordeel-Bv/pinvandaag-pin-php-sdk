@@ -17,19 +17,19 @@ class LastTransaction
     public function get(): array
     {
         try {
-            $response = $this->client->request(
+            $response = $this->client->requestWithFallback(
                 '/V2/instore/transactions/last_transaction',
                 [],
                 'POST'
             );
 
+            if (empty($response)) {
+                return $this->client->error('Geen transactie gevonden.');
+            }
+
             // 404 = terminal niet gevonden of geen transacties
             if (($response['http_code'] ?? null) === 404) {
-                return [
-                    'status' => 'error',
-                    'message' => 'Terminal niet gevonden of geen transacties beschikbaar.',
-                    'data' => $response,
-                ];
+                return $this->client->error('Terminal niet gevonden of geen transacties beschikbaar.', $response);
             }
 
             // Als API direct transaction row teruggeeft
@@ -44,32 +44,18 @@ class LastTransaction
 
             // Als API error-shape teruggeeft
             if (($response['status'] ?? null) === 'error') {
-                return [
-                    'status' => 'error',
-                    'message' => $this->extractErrorMessage($response),
-                    'data' => $response,
-                ];
+                return $this->client->error($this->extractErrorMessage($response), $response);
             }
 
-            return [
-                'status' => 'error',
-                'message' => 'Onbekende response bij ophalen laatste transactie.',
-                'data' => $response,
-            ];
+            return $this->client->error('Onbekende response bij ophalen laatste transactie.', $response);
         } catch (\Throwable $e) {
             $message = $e->getMessage();
 
             if (str_contains($message, 'HTTP error: 404')) {
-                return [
-                    'status' => 'error',
-                    'message' => 'Terminal niet gevonden of geen transacties beschikbaar.',
-                ];
+                return $this->client->error('Terminal niet gevonden of geen transacties beschikbaar.');
             }
 
-            return [
-                'status' => 'error',
-                'message' => $message,
-            ];
+            return $this->client->error($message);
         }
     }
 

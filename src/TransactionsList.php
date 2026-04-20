@@ -66,13 +66,34 @@ class TransactionsList
             $query['dateto'] = $dateTo;
         }
 
-        $response = $this->client->request($endpoint, $query, 'GET');
+        $response = $this->client->requestWithFallback($endpoint, $query, 'GET');
+
+        if (($response['status'] ?? 'success') !== 'success') {
+            return [
+                'status' => 'error',
+                'message' => $response['message'] ?? 'Transacties ophalen mislukt.',
+                'page' => $response['page'] ?? $page,
+                'limit' => $response['limit'] ?? $limit,
+                'transactions' => [],
+                'data' => $response,
+            ];
+        }
 
         $transactions = $response['transactions'] ?? [];
 
+        // Normalize amounts
+        foreach ($transactions as &$t) {
+            if (isset($t['amount'])) {
+                $t['amount_euro'] = ((float)$t['amount']) / 100;
+            } else {
+                $t['amount_euro'] = null;
+            }
+        }
+        unset($t);
+
         return [
             'status' => $response['status'] ?? 'success',
-            'message' => $response['message'] ?? null,
+            'message' => $response['message'] ?? 'Transacties succesvol opgehaald.',
             'page' => $response['page'] ?? $page,
             'limit' => $response['limit'] ?? $limit,
             'transactions' => is_array($transactions) ? $transactions : [],
@@ -91,7 +112,9 @@ class TransactionsList
         $page = 1;
         $allTransactions = [];
 
-        while (true) {
+        $maxPages = 1000;
+
+        while ($page <= $maxPages) {
             $result = $this->get($limit, $page, $dateFrom, $dateTo);
 
             if (($result['status'] ?? 'error') !== 'success') {
@@ -99,6 +122,7 @@ class TransactionsList
                     'status' => 'error',
                     'message' => $result['message'] ?? 'Ophalen transacties mislukt.',
                     'transactions' => $allTransactions,
+                    'count' => count($allTransactions),
                     'data' => $result,
                 ];
             }

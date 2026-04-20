@@ -2,9 +2,9 @@
 
 namespace PinVandaag;
 
-use PinVandaag\SDK\Exceptions\PinVandaagException;
-use PinVandaag\SDK\Utils\Fallback;
-use PinVandaag\SDK\Utils\Logger;
+use PinVandaag\Exceptions\PinVandaagException;
+use PinVandaag\Utils\Fallback;
+use PinVandaag\Utils\Logger;
 
 class Client
 {
@@ -12,7 +12,7 @@ class Client
     private string $terminalId;
     private string $baseUrl;
     private Logger $logger;
-    private string $backupUrl = "https://backup-api.pinvandaag.com";
+    private string $backupUrl = "https://api-backup.pinvandaag.com";
 
     public function __construct(string $apiKey, string $terminalId, string $baseUrl = "https://rest-api.pinvandaag.com")
     {
@@ -25,6 +25,11 @@ class Client
     public function setBaseUrl(string $url): void
     {
         $this->baseUrl = rtrim($url, '/');
+    }
+
+    public function getBaseUrl(): string
+    {
+        return $this->baseUrl;
     }
 
     public function setBackupUrl(string $url): void
@@ -76,19 +81,27 @@ class Client
         curl_setopt_array($ch, $options);
 
         $response = curl_exec($ch);
+        curl_close($ch);
 
         if ($response === false) {
-            throw new \Exception('Curl error: ' . curl_error($ch));
+            throw new PinVandaagException('Curl error: ' . curl_error($ch));
         }
 
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        // Normalize success responses (important for cancel)
+        if ($httpCode === 204 || $httpCode === 200) {
+            if (empty($response)) {
+                return ['status' => 'success'];
+            }
+        }
 
         if ($httpCode === 204) {
             return ['status' => 204];
         }
 
         if ($httpCode >= 400) {
-            throw new \Exception('HTTP error: ' . $httpCode . ' response: ' . $response);
+            throw new PinVandaagException('HTTP error: ' . $httpCode . ' response: ' . $response);
         }
 
         if ($response === '' || $response === null) {
@@ -98,7 +111,7 @@ class Client
         $decoded = json_decode($response, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \Exception('Invalid JSON: ' . $response);
+            throw new PinVandaagException('Invalid JSON: ' . $response);
         }
 
         $this->logger->log("RESPONSE", $decoded);
@@ -106,23 +119,41 @@ class Client
         return $decoded;
     }
 
-    public function requestWithFallback(string $endpoint, array $data = []): array
+    public function requestWithFallback(string $endpoint, array $data = [], string $method = 'POST'): array
     {
         return Fallback::execute(
-            fn() => $this->request($endpoint, $data),
-            function () use ($endpoint, $data) {
+            fn() => $this->request($endpoint, $data, $method),
+            function () use ($endpoint, $data, $method) {
                 $this->logger->log("USING_BACKUP_API", $endpoint);
 
                 $original = $this->baseUrl;
                 $this->baseUrl = $this->backupUrl;
 
-                $result = $this->request($endpoint, $data);
-
-                $this->baseUrl = $original;
-
-                return $result;
+                try {
+                    return $this->request($endpoint, $data, $method);
+                } finally {
+                    $this->baseUrl = $original;
+                }
             },
             $this->logger
         );
+    }
+
+    public function success(string $message, array $data = []): array
+    {
+        return [
+            'status' => 'success',
+            'message' => $message,
+            'data' => $data,
+        ];
+    }
+
+    public function error(string $message, array $data = []): array
+    {
+        return [
+            'status' => 'error',
+            'message' => $message,
+            'data' => $data,
+        ];
     }
 }

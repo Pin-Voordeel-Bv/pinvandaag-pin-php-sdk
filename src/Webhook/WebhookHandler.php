@@ -15,7 +15,7 @@ class WebhookHandler
     {
         $this->client = $client;
         $this->logger = new Logger();
-        $this->backupUrl = "https://backup-api.pinvandaag.com/wl.php";
+        $this->backupUrl = "https://api-backup.pinvandaag.com/wl.php";
     }
 
     public function handle(): void
@@ -41,7 +41,7 @@ class WebhookHandler
 
         // 🔥 Check if transaction exists locally
         try {
-            $status = $this->client->request(
+            $status = $this->client->requestWithFallback(
                 "/V2/instore/transactions/status",
                 ["transaction_id" => $transactionId]
             );
@@ -62,7 +62,7 @@ class WebhookHandler
     private function forwardToBackup(string $raw): void
     {
         // prevent loop
-        if (str_contains($_SERVER['HTTP_HOST'], 'backup-api')) {
+        if (str_contains($_SERVER['HTTP_HOST'], 'api-backup')) {
             return;
         }
 
@@ -78,5 +78,6 @@ class WebhookHandler
         ]);
 
         curl_exec($ch);
+        curl_close($ch);
     }
 }
