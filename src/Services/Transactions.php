@@ -1,9 +1,9 @@
 <?php
 
-namespace PinVandaag\SDK\Services;
+namespace PinVandaag\Services;
 
-use PinVandaag\SDK\Client;
-use PinVandaag\SDK\Utils\Status;
+use PinVandaag\Client;
+use PinVandaag\Utils\Status;
 
 class Transactions
 {

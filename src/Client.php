@@ -1,6 +1,6 @@
 <?php
 
-namespace PinVandaag\SDK;
+namespace PinVandaag;
 
 use PinVandaag\SDK\Exceptions\PinVandaagException;
 use PinVandaag\SDK\Utils\Fallback;
@@ -32,58 +32,73 @@ class Client
         $this->backupUrl = rtrim($url, '/');
     }
 
-    public function request(string $endpoint, array $data = []): array
+    public function getTerminalId(): string
     {
-        $payload = array_merge([
-            "terminal_id" => $this->terminalId,
-        ], $data);
+        return $this->terminalId;
+    }
 
+    public function request(string $endpoint, array $data = [], string $method = 'POST'): array
+    {
         $url = $this->baseUrl . $endpoint;
+        $method = strtoupper($method);
+
+        if ($method === 'GET' && !empty($data)) {
+            $url .= (str_contains($url, '?') ? '&' : '?') . http_build_query($data);
+        }
 
         $this->logger->log("REQUEST", [
-            "url" => $url,
-            "payload" => $payload,
+            'method' => $method,
+            'url' => $url,
+            'data' => $data,
         ]);
 
         $ch = curl_init($url);
 
-        curl_setopt_array($ch, [
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => http_build_query($payload),
             CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTPHEADER => [
                 'X-API-KEY: ' . $this->apiKey,
                 'Accept: application/json',
-                'Content-Type: application/x-www-form-urlencoded',
             ],
-        ]);
+        ];
+
+        if ($method === 'POST') {
+            $payload = array_merge([
+                'terminal_id' => $this->terminalId,
+            ], $data);
+
+            $options[CURLOPT_POST] = true;
+            $options[CURLOPT_POSTFIELDS] = http_build_query($payload);
+            $options[CURLOPT_HTTPHEADER][] = 'Content-Type: application/x-www-form-urlencoded';
+        }
+
+        curl_setopt_array($ch, $options);
 
         $response = curl_exec($ch);
 
         if ($response === false) {
-            throw new PinVandaagException("Curl error: " . curl_error($ch));
+            throw new \Exception('Curl error: ' . curl_error($ch));
         }
 
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        // Handle 204 success (important for cancel)
         if ($httpCode === 204) {
-            return ["status" => 204];
+            return ['status' => 204];
         }
 
         if ($httpCode >= 400) {
-            throw new PinVandaagException("HTTP error: " . $httpCode . " response: " . $response);
+            throw new \Exception('HTTP error: ' . $httpCode . ' response: ' . $response);
         }
 
-        if (empty($response)) {
-            return ["status" => "empty"];
+        if ($response === '' || $response === null) {
+            return ['status' => 'empty'];
         }
 
         $decoded = json_decode($response, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new PinVandaagException("Invalid JSON: " . $response);
+            throw new \Exception('Invalid JSON: ' . $response);
         }
 
         $this->logger->log("RESPONSE", $decoded);

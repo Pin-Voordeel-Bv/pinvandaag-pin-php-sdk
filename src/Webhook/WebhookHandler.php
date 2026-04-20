@@ -1,9 +1,9 @@
 <?php
 
-namespace PinVandaag\SDK\Webhook;
+namespace PinVandaag\Webhook;
 
-use PinVandaag\SDK\Client;
-use PinVandaag\SDK\Utils\Logger;
+use PinVandaag\Client;
+use PinVandaag\Utils\Logger;
 
 class WebhookHandler
 {
