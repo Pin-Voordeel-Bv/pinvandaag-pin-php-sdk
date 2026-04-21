@@ -16,6 +16,10 @@ class Transactions
 
     public function create(int $amount): array
     {
+        if (empty($amount)) {
+            return $this->client->error('Bedrag is verplicht.');
+        }
+
         return $this->client->requestWithFallback("/V2/instore/transactions/start", [
             "amount" => $amount
         ]);

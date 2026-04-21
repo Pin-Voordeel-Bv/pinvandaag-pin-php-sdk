@@ -62,6 +62,7 @@ class Client
         $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_HTTPHEADER => [
                 'X-API-KEY: ' . $this->apiKey,
                 'Accept: application/json',
@@ -76,16 +77,20 @@ class Client
             $options[CURLOPT_POST] = true;
             $options[CURLOPT_POSTFIELDS] = http_build_query($payload);
             $options[CURLOPT_HTTPHEADER][] = 'Content-Type: application/x-www-form-urlencoded';
+            $options[CURLOPT_HTTPHEADER][] = 'User-Agent: PinVandaag-PHP-SDK/1.1.1';
         }
 
         curl_setopt_array($ch, $options);
 
         $response = curl_exec($ch);
-        curl_close($ch);
 
         if ($response === false) {
-            throw new PinVandaagException('Curl error: ' . curl_error($ch));
+            $error = curl_error($ch);
+            curl_close($ch);
+            throw new PinVandaagException("Curl error: " . $error);
         }
+
+        curl_close($ch);
 
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 

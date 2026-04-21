@@ -8,5 +8,8 @@
   },
   "require": {
     "php": ">=8.0"
-  }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "type": "library"
 }
