@@ -18,10 +18,12 @@ $response = $transactions->createEuro(0.01);
 
 $transactionId = $response['transaction_id'] ?? null;
 
-$status = $transactions->status($transactionId);
+if ($transactionId) {
+    $status = $transactions->status($transactionId);
 
-if ($status['normalizedStatus'] === 'success') {
-    echo "Payment OK";
+    if ($status['normalizedStatus'] === 'success') {
+        echo "Payment OK";
+    }
 }
 ```
 

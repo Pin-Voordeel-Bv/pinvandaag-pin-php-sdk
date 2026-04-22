@@ -77,7 +77,7 @@ class Client
             $options[CURLOPT_POST] = true;
             $options[CURLOPT_POSTFIELDS] = http_build_query($payload);
             $options[CURLOPT_HTTPHEADER][] = 'Content-Type: application/x-www-form-urlencoded';
-            $options[CURLOPT_HTTPHEADER][] = 'User-Agent: PinVandaag-PHP-SDK/1.0.4';
+            $options[CURLOPT_HTTPHEADER][] = 'User-Agent: PinVandaag-PHP-SDK/1.0.5';
         }
 
         curl_setopt_array($ch, $options);

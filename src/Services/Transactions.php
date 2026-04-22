@@ -63,7 +63,7 @@ class Transactions
         }
 
         if (isset($response['status'])) {
-            $response['normalizedStatus'] = Status::normalize($response['status']);
+            $response['normalizedStatus'] = Status::normalize($response['transaction']['status']);
         }
 
         return $response;
