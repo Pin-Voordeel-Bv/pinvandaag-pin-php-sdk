@@ -77,7 +77,7 @@ class Client
             $options[CURLOPT_POST] = true;
             $options[CURLOPT_POSTFIELDS] = http_build_query($payload);
             $options[CURLOPT_HTTPHEADER][] = 'Content-Type: application/x-www-form-urlencoded';
-            $options[CURLOPT_HTTPHEADER][] = 'User-Agent: PinVandaag-PHP-SDK/1.1.1';
+            $options[CURLOPT_HTTPHEADER][] = 'User-Agent: PinVandaag-PHP-SDK/1.0.4';
         }
 
         curl_setopt_array($ch, $options);
@@ -106,7 +106,17 @@ class Client
         }
 
         if ($httpCode >= 400) {
-            throw new PinVandaagException('HTTP error: ' . $httpCode . ' response: ' . $response);
+            $decoded = json_decode($response, true);
+
+            if (is_array($decoded)) {
+                return [
+                    'status' => 'error',
+                    'message' => $decoded['message'] ?? 'API error',
+                    'data' => $decoded,
+                ];
+            }
+
+            throw new PinVandaagException("HTTP error: $httpCode response: " . $response);
         }
 
         if ($response === '' || $response === null) {

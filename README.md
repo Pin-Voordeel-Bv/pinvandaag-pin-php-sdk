@@ -13,10 +13,10 @@ $client = new Client("API_KEY", "TERMINAL_ID");
 
 $transactions = new Transactions($client);
 
-// Create €1.00
-$response = $transactions->createEuro(1.00);
+// Create €0.01
+$response = $transactions->createEuro(0.01);
 
-$transactionId = $response['transactionId'] ?? null;
+$transactionId = $response['transaction_id'] ?? null;
 
 $status = $transactions->status($transactionId);
 
