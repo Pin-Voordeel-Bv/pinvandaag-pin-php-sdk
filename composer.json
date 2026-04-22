@@ -1,6 +1,8 @@
 {
   "name": "pinvandaag/pin-php-sdk",
   "description": "PinVandaag REST API V2 PHP SDK",
+  "type": "library",
+  "license": "MIT",
   "autoload": {
     "psr-4": {
       "PinVandaag\\": "src/"
@@ -10,6 +12,5 @@
     "php": ">=8.0"
   },
   "minimum-stability": "stable",
-  "prefer-stable": true,
-  "type": "library"
+  "prefer-stable": true
 }
