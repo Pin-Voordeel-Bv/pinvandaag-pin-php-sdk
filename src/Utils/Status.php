@@ -21,7 +21,7 @@ class Status
                 return 'failed';
 
             default:
-                return 'unknown';
+                return $status;
         }
     }
 }
