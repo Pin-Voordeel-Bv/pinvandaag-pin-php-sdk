@@ -2,6 +2,9 @@
 
 namespace PinVandaag\Utils;
 
+// CCV: pending, success, failed, manualintervention
+// Worldline: start, final, success, failed
+
 class Status
 {
     public static function normalize(string $status): string
